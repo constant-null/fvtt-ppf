@@ -1,0 +1,12 @@
+{
+  "FVTTPPF": {
+    "Enabled": {
+      "Name": "Enable",
+      "Hint": "Enable personal folders for users."
+    },
+    "RootDir": {
+      "Name": "Root directory",
+      "Hint": "Root directory to which players will have access to."
+    }
+  }
+}
