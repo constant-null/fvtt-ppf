@@ -1,4 +1,4 @@
-Hooks.once("init", function () {
+Hooks.once("setup", function () {
     registerSettings();
     patchFilePicker();
 });
@@ -10,6 +10,7 @@ function registerSettings() {
         config: true, // false if you don't want it to show in module config
         type: Boolean,
         restricted: true,
+        requiresReload: true,
         default: false
     });
 
@@ -19,17 +20,28 @@ function registerSettings() {
         config: true, // false if you don't want it to show in module config
         type: String,
         restricted: true,
-        default: ""
+        requiresReload: true,
+        default: "user_data"
     });
 }
 
-function patchFilePicker() {
+async function patchFilePicker() {
+    if (!game.settings.get('fvtt-ppf', 'enabled')) return;
+    const userDir = game.settings.get('fvtt-ppf', 'rootDir');
+    if (game.user.isGM) {
+        for (const u of game.users) {
+            const target = userDir + "/" + u.name;
+            try { await FilePicker.createDirectory("data", userDir) } catch (e) {}
+            try { await FilePicker.createDirectory("data", target) } catch (e) {}
+        }
+    }
+
     FilePicker.prototype._original_browse = FilePicker.prototype.browse;
     FilePicker.prototype.browse = async function (target, options={}) {
-        if (!game.user.isGM && game.settings.get('fvtt-ppf', 'enabled')) {
-            const userDir = game.settings.get('fvtt-ppf', 'rootDir');
-            if (!target || !target.startsWith(userDir)) {
-                target = userDir
+        if (!game.user.isGM) {
+            const personalDir = userDir+ "/" + game.user.name;
+            if (!target || !target.startsWith(personalDir)) {
+                target = personalDir
             }
         }
         return await this._original_browse(target, options)
